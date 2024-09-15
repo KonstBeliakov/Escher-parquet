@@ -5,7 +5,7 @@ import numpy as np
 class Node:
     def __init__(self, figure, pos=(0, 0)):
         self.figure = figure
-        self.pos = pos
+        self.x, self.y = pos
         self.activation_radius = 7
         self.radius = 5
         self.draw_node = True
@@ -21,7 +21,17 @@ class Node:
 
     @pos.setter
     def pos(self, pos):
+        dx, dy = pos - self.pos
+        old_x, old_y = self.pos
         self.x, self.y = pos
+        print(self.pos)
+        print(self.figure.clone_nodes_pos)
+        for clone_nodes_pos in self.figure.clone_nodes_pos:
+            for node_number, node_pos in enumerate(clone_nodes_pos):
+                if abs(old_x + self.figure.pos[0] - node_pos[0]) < 5 and abs(old_y + self.figure.pos[1] - node_pos[1]) < 5:
+                    print('moving a node')
+                    self.figure.nodes[node_number].__dict__['x'] += dx
+                    self.figure.nodes[node_number].__dict__['y'] += dy
 
     def __setattr__(self, key, value):
         if key == 'next':

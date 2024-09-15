@@ -12,15 +12,17 @@ class MainWindow:
         pygame.init()
 
         WIDTH, HEIGHT = 800, 600
-        self.screen = pygame.display.set_mode((WIDTH, HEIGHT))
+        self.screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.RESIZABLE)
         pygame.display.set_caption("Простое Pygame приложение")
 
         self.running = True
 
-        self.figure_size = 100
+        self.figure_size = 300
 
-        self.figure = Figure(pos=(200, 200), figure_type=FigureTypes.HEXAGON, size=self.figure_size)
+        self.figure = Figure(pos=(400, 400), figure_type=FigureTypes.HEXAGON, size=self.figure_size)
         self.events = []
+
+        self.fullscreen = False
 
     def update(self):
         if self.running:

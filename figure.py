@@ -52,6 +52,10 @@ class Figure:
     def pos(self, pos):
         self.x, self.y = pos
 
+    @property
+    def clone_nodes_pos(self):
+        return [[node.pos + clone_pos for node in self.nodes] for clone_pos in self.clones_pos]
+
     def update(self, main_window):
         for node in self.nodes:
             node.update(main_window, self.pos)
