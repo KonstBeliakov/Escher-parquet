@@ -32,6 +32,7 @@ class Figure:
         self.color = (0, 200, 0, 255)
 
         self.last_click = None
+        self.map_moving = False
 
         self.clones_pos = []
         n = 6
@@ -67,12 +68,14 @@ class Figure:
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button == 1:
                     for i, node in enumerate(self.nodes):
-                        if dist(node.pos + self.pos, event.pos) <= node.activation_radius:
+                        if dist(node.screen_pos(self.pos), event.pos) <= node.activation_radius:
+                            self.map_moving = False
                             break
                     else:
+                        self.map_moving = True
                         self.last_click = event.pos
                 if event.button == 2:
-                    closest_node = min(self.nodes, key=lambda node: dist(node.pos + self.pos, event.pos))
+                    closest_node = min(self.nodes, key=lambda node: dist(node.screen_pos(self.pos), event.pos))
                     next_node = closest_node.next
                     new_node = Node(figure=self, pos=(closest_node.pos + next_node.pos) // 2)
 
@@ -82,22 +85,23 @@ class Figure:
                     self.nodes.append(new_node)
                 if event.button == 3:
                     for i, node in enumerate(self.nodes):
-                        if dist(node.pos + self.pos, event.pos) <= node.activation_radius:
+                        if dist(node.screen_pos(self.pos), event.pos) <= node.activation_radius:
                             prev_node = self.nodes[i].previous
                             next_node = self.nodes[i].next
-                            print(prev_node, next_node)
                             self.nodes[i].delete_connections()
                             del self.nodes[i]
                             prev_node.next = next_node
             if event.type == pygame.MOUSEBUTTONUP:
-                if event.button == 1:
-                    utils.diplacement_vector += np.array(event.pos) - np.array(self.last_click)
-                    self.last_click = None
+                self.map_moving = False
+
+        if self.map_moving:
+            utils.diplacement_vector += np.array(pygame.mouse.get_pos()) - np.array(self.last_click)
+            self.last_click = pygame.mouse.get_pos()
 
     def draw(self, screen):
         for node in self.nodes:
-            node.draw(screen, self.pos * utils.scale, color=self.color)
+            node.draw(screen, self.pos, color=self.color)
 
         for clone_pos in self.clones_pos:
             for node in self.nodes:
-                node.draw(screen, clone_pos * utils.scale, color=self.clone_color)
+                node.draw(screen, clone_pos, color=self.clone_color)

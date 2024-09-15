@@ -33,10 +33,9 @@ class Node:
                     self.figure.nodes[node_number].__dict__['x'] += dx
                     self.figure.nodes[node_number].__dict__['y'] += dy
 
-    @property
-    def screen_pos(self):
-        return ((utils.diplacement_vector[0] + self.x + self.figure.pos[0]) * utils.scale,
-                (utils.diplacement_vector[1] + self.y + self.figure.pos[1]) * utils.scale)
+    def screen_pos(self, figure_pos):
+        return ((utils.diplacement_vector[0] + self.x + figure_pos[0]) * utils.scale,
+                (utils.diplacement_vector[1] + self.y + figure_pos[1]) * utils.scale)
 
     def __setattr__(self, key, value):
         if key == 'next':
@@ -75,27 +74,22 @@ class Node:
     def update(self, main_window, figure_position=(0, 0)):
         for event in main_window.events:
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                mouse_x, mouse_y = event.pos
-                x = self.x + figure_position[0]
-                y = self.y + figure_position[1]
-                if (mouse_x - x) ** 2 + (mouse_y - y) ** 2 <= self.activation_radius ** 2:
+                if dist(event.pos, self.screen_pos(figure_position)) <= self.activation_radius:
                     self.active = True
             if event.type == pygame.MOUSEBUTTONUP and event.button == 1:
                 self.active = False
         if self.active:
-            self.pos = (pygame.mouse.get_pos()[0] - figure_position[0], pygame.mouse.get_pos()[1] - figure_position[1])
+            self.pos = (self.x + (np.array(pygame.mouse.get_pos()[0]) - self.screen_pos(figure_position)[0]) * utils.scale,
+                        self.y + (np.array(pygame.mouse.get_pos()[1]) - self.screen_pos(figure_position)[1]) * utils.scale)
 
     def draw(self, screen, figure_position=(0, 0), color=(0, 0, 0)):
         surface = pygame.Surface((1000, 1000), pygame.SRCALPHA)
 
-        pos = (utils.diplacement_vector[0] * utils.scale + self.x * utils.scale + figure_position[0],
-               utils.diplacement_vector[1] * utils.scale + self.y * utils.scale + figure_position[1])
         if self.draw_node:
-            pygame.draw.circle(surface, color, pos, self.radius, width=2 * self.active)
+            pygame.draw.circle(surface, color, self.screen_pos(figure_position), self.radius, width=2 * self.active)
 
         if self.next is not None:
-            next_pos = (utils.diplacement_vector[0] * utils.scale + self.next.pos[0] * utils.scale + figure_position[0],
-                        utils.diplacement_vector[1] * utils.scale + self.next.pos[1] * utils.scale + figure_position[1])
-            pygame.draw.line(surface, color, pos, next_pos, 1)
+            pygame.draw.line(surface, color, self.screen_pos(figure_position),
+                             self.next.screen_pos(figure_position), 1)
 
         screen.blit(surface, (0, 0))
