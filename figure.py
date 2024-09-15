@@ -1,12 +1,14 @@
 import enum
 from math import sin, cos, radians
 import pygame
+import numpy as np
 
 from node import Node
 from utils import *
 
 
 class FigureTypes(enum.Enum):
+    NO_FIGURE = 0
     SQUARE = 1
     TRIANGLE = 2
     HEXAGON = 3
@@ -25,15 +27,26 @@ class Figure:
             case FigureTypes.HEXAGON:
                 self.regular_polygon(6)
 
+        self.clone_color = (0, 0, 0, 100)
+        self.color = (0, 200, 0, 255)
+
+        self.clones_pos = []
+        n = 6
+        for i in range(n):
+            a = self.nodes[i].pos + self.pos
+            b = self.nodes[(i + 1) % n].pos + self.pos
+            m = (a + b) // 2
+            self.clones_pos.append(self.pos + 2 * (m - self.pos))
+
     def regular_polygon(self, n):
-        self.nodes = [Node((self.x + sin(radians(i * 360 // n)) * (self.size // 2),
-                            self.y + cos(radians(i * 360 // n)) * (self.size // 2))) for i in range(n)]
+        self.nodes = [Node(self, (sin(radians((i - 0.5) * 360 // n)) * (self.size // 2),
+                                  cos(radians((i - 0.5) * 360 // n)) * (self.size // 2))) for i in range(n)]
         for i in range(n):
             self.nodes[i].next = self.nodes[(i + 1) % n]
 
     @property
     def pos(self):
-        return self.x, self.y
+        return np.array([self.x, self.y])
 
     @pos.setter
     def pos(self, pos):
@@ -41,7 +54,7 @@ class Figure:
 
     def update(self, main_window):
         for node in self.nodes:
-            node.update(main_window)
+            node.update(main_window, self.pos)
 
         for event in main_window.events:
             if event.type == pygame.MOUSEBUTTONDOWN:
@@ -67,4 +80,8 @@ class Figure:
 
     def draw(self, screen):
         for node in self.nodes:
-            node.draw(screen)
+            node.draw(screen, self.pos, color=self.color)
+
+        for clone_pos in self.clones_pos:
+            for node in self.nodes:
+                node.draw(screen, clone_pos, color=self.clone_color)

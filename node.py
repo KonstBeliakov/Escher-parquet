@@ -1,13 +1,14 @@
 import pygame
+import numpy as np
 
 
 class Node:
-    def __init__(self, pos=(0, 0)):
+    def __init__(self, figure, pos=(0, 0)):
+        self.figure = figure
         self.pos = pos
         self.activation_radius = 7
         self.radius = 5
         self.draw_node = True
-        self.color = (0, 0, 0)
 
         self.active = False
 
@@ -16,7 +17,7 @@ class Node:
 
     @property
     def pos(self):
-        return self.x, self.y
+        return np.array([self.x, self.y])
 
     @pos.setter
     def pos(self, pos):
@@ -38,13 +39,6 @@ class Node:
         else:
             super().__setattr__(key, value)
 
-    def add_next(self, new_node):
-        self.next = new_node
-        new_node.previous = self
-
-    def add_previous(self, new_node):
-        new_node.add_next(self)
-
     def remove_from_connections(self, node):
         if self.previous == node:
             self.previous.next = None
@@ -63,20 +57,28 @@ class Node:
             self.previous.next = None
             self.previous = None
 
-    def update(self, main_window):
+    def update(self, main_window, figure_position=(0, 0)):
         for event in main_window.events:
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 mouse_x, mouse_y = event.pos
-                if (mouse_x - self.x) ** 2 + (mouse_y - self.y) ** 2 <= self.activation_radius ** 2:
+                x = self.x + figure_position[0]
+                y = self.y + figure_position[1]
+                if (mouse_x - x) ** 2 + (mouse_y - y) ** 2 <= self.activation_radius ** 2:
                     self.active = True
             if event.type == pygame.MOUSEBUTTONUP and event.button == 1:
                 self.active = False
         if self.active:
-            self.pos = pygame.mouse.get_pos()
+            self.pos = (pygame.mouse.get_pos()[0] - figure_position[0], pygame.mouse.get_pos()[1] - figure_position[1])
 
-    def draw(self, screen):
+    def draw(self, screen, figure_position=(0, 0), color=(0, 0, 0)):
+        surface = pygame.Surface((1000, 1000), pygame.SRCALPHA)
+
+        pos = (self.x + figure_position[0], self.y + figure_position[1])
         if self.draw_node:
-            pygame.draw.circle(screen, self.color, self.pos, self.radius, width=2 * self.active)
+            pygame.draw.circle(surface, color, pos, self.radius, width=2 * self.active)
 
         if self.next is not None:
-            pygame.draw.line(screen, self.color, self.pos, self.next.pos, 1)
+            next_pos = (self.next.pos[0] + figure_position[0], self.next.pos[1] + figure_position[1])
+            pygame.draw.line(surface, color, pos, next_pos, 1)
+
+        screen.blit(surface, (0, 0))

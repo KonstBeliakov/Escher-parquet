@@ -1,8 +1,10 @@
+import numpy as np
 import pygame
 from random import randint
 
 from node import Node
 from figure import Figure, FigureTypes
+from utils import *
 
 
 class MainWindow:
@@ -15,8 +17,9 @@ class MainWindow:
 
         self.running = True
 
-        self.fiure = Figure(pos=(200, 200))
+        self.figure_size = 100
 
+        self.figure = Figure(pos=(200, 200), figure_type=FigureTypes.HEXAGON, size=self.figure_size)
         self.events = []
 
     def update(self):
@@ -28,8 +31,8 @@ class MainWindow:
 
             self.screen.fill((255, 255, 255))
 
-            self.fiure.update(self)
-            self.fiure.draw(self.screen)
+            self.figure.update(self)
+            self.figure.draw(self.screen)
 
             pygame.display.flip()
 
