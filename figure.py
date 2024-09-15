@@ -29,8 +29,7 @@ class Figure:
         self.nodes = [Node((self.x + sin(radians(i * 360 // n)) * (self.size // 2),
                             self.y + cos(radians(i * 360 // n)) * (self.size // 2))) for i in range(n)]
         for i in range(n):
-            self.nodes[i].add_connection(self.nodes[(i - 1) % n])
-            self.nodes[i].add_connection(self.nodes[(i + 1) % n])
+            self.nodes[i].next = self.nodes[(i + 1) % n]
 
     @property
     def pos(self):
@@ -48,22 +47,23 @@ class Figure:
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button == 2:
                     closest_node = min(self.nodes, key=lambda node: dist(node.pos, event.pos))
-                    next_node = closest_node.connections[0]
+                    next_node = closest_node.next
                     new_node = Node(mid(closest_node.pos, next_node.pos))
 
-                    closest_node.remove_from_connections(next_node)
-                    closest_node.add_connection(new_node)
-                    next_node.add_connection(new_node)
+                    closest_node.next = new_node
+                    new_node.next = next_node
 
                     self.nodes.append(new_node)
                 if event.button == 3:
                     mouse_x, mouse_y = event.pos
                     for i, node in enumerate(self.nodes):
                         if (mouse_x - node.x) ** 2 + (mouse_y - node.y) ** 2 <= node.activation_radius ** 2:
-                            n1, n2 = self.nodes[i].connections[:2]
+                            prev_node = self.nodes[i].previous
+                            next_node = self.nodes[i].next
+                            print(prev_node, next_node)
                             self.nodes[i].delete_connections()
                             del self.nodes[i]
-                            n1.add_connection(n2)
+                            prev_node.next = next_node
 
     def draw(self, screen):
         for node in self.nodes:
