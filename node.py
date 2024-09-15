@@ -1,6 +1,9 @@
 import pygame
 import numpy as np
 
+import utils
+from utils import *
+
 
 class Node:
     def __init__(self, figure, pos=(0, 0)):
@@ -24,14 +27,16 @@ class Node:
         dx, dy = pos - self.pos
         old_x, old_y = self.pos
         self.x, self.y = pos
-        print(self.pos)
-        print(self.figure.clone_nodes_pos)
         for clone_nodes_pos in self.figure.clone_nodes_pos:
             for node_number, node_pos in enumerate(clone_nodes_pos):
                 if abs(old_x + self.figure.pos[0] - node_pos[0]) < 5 and abs(old_y + self.figure.pos[1] - node_pos[1]) < 5:
-                    print('moving a node')
                     self.figure.nodes[node_number].__dict__['x'] += dx
                     self.figure.nodes[node_number].__dict__['y'] += dy
+
+    @property
+    def screen_pos(self):
+        return ((utils.diplacement_vector[0] + self.x + self.figure.pos[0]) * utils.scale,
+                (utils.diplacement_vector[1] + self.y + self.figure.pos[1]) * utils.scale)
 
     def __setattr__(self, key, value):
         if key == 'next':
@@ -83,12 +88,14 @@ class Node:
     def draw(self, screen, figure_position=(0, 0), color=(0, 0, 0)):
         surface = pygame.Surface((1000, 1000), pygame.SRCALPHA)
 
-        pos = (self.x + figure_position[0], self.y + figure_position[1])
+        pos = (utils.diplacement_vector[0] * utils.scale + self.x * utils.scale + figure_position[0],
+               utils.diplacement_vector[1] * utils.scale + self.y * utils.scale + figure_position[1])
         if self.draw_node:
             pygame.draw.circle(surface, color, pos, self.radius, width=2 * self.active)
 
         if self.next is not None:
-            next_pos = (self.next.pos[0] + figure_position[0], self.next.pos[1] + figure_position[1])
+            next_pos = (utils.diplacement_vector[0] * utils.scale + self.next.pos[0] * utils.scale + figure_position[0],
+                        utils.diplacement_vector[1] * utils.scale + self.next.pos[1] * utils.scale + figure_position[1])
             pygame.draw.line(surface, color, pos, next_pos, 1)
 
         screen.blit(surface, (0, 0))

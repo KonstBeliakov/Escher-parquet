@@ -4,6 +4,7 @@ from random import randint
 
 from node import Node
 from figure import Figure, FigureTypes
+import utils
 from utils import *
 
 
@@ -30,6 +31,11 @@ class MainWindow:
             for event in self.events:
                 if event.type == pygame.QUIT:
                     self.quit()
+                if event.type == pygame.MOUSEWHEEL:
+                    if event.y > 0:
+                        utils.scale *= 1.1
+                    elif event.y < 0:
+                        utils.scale /= 1.1
 
             self.screen.fill((255, 255, 255))
 

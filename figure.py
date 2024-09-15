@@ -5,6 +5,7 @@ import numpy as np
 
 from node import Node
 from utils import *
+import utils
 
 
 class FigureTypes(enum.Enum):
@@ -29,6 +30,8 @@ class Figure:
 
         self.clone_color = (0, 0, 0, 100)
         self.color = (0, 200, 0, 255)
+
+        self.last_click = None
 
         self.clones_pos = []
         n = 6
@@ -62,6 +65,12 @@ class Figure:
 
         for event in main_window.events:
             if event.type == pygame.MOUSEBUTTONDOWN:
+                if event.button == 1:
+                    for i, node in enumerate(self.nodes):
+                        if dist(node.pos + self.pos, event.pos) <= node.activation_radius:
+                            break
+                    else:
+                        self.last_click = event.pos
                 if event.button == 2:
                     closest_node = min(self.nodes, key=lambda node: dist(node.pos + self.pos, event.pos))
                     next_node = closest_node.next
@@ -80,11 +89,15 @@ class Figure:
                             self.nodes[i].delete_connections()
                             del self.nodes[i]
                             prev_node.next = next_node
+            if event.type == pygame.MOUSEBUTTONUP:
+                if event.button == 1:
+                    utils.diplacement_vector += np.array(event.pos) - np.array(self.last_click)
+                    self.last_click = None
 
     def draw(self, screen):
         for node in self.nodes:
-            node.draw(screen, self.pos, color=self.color)
+            node.draw(screen, self.pos * utils.scale, color=self.color)
 
         for clone_pos in self.clones_pos:
             for node in self.nodes:
-                node.draw(screen, clone_pos, color=self.clone_color)
+                node.draw(screen, clone_pos * utils.scale, color=self.clone_color)
