@@ -16,15 +16,23 @@ class MainWindow:
 
         self.nodes = [Node((randint(100, 500), randint(100, 500))) for _ in range(10)]
 
+        for i in range(10):
+            for j in range(1, 3):
+                self.nodes[i].add_connection(self.nodes[(i + j) % 10])
+
+        self.events = []
+
     def update(self):
         if self.running:
-            for event in pygame.event.get():
+            self.events = pygame.event.get()
+            for event in self.events:
                 if event.type == pygame.QUIT:
                     self.quit()
 
             self.screen.fill((255, 255, 255))
 
             for node in self.nodes:
+                node.update(self)
                 node.draw(self.screen)
 
             pygame.display.flip()
