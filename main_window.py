@@ -2,6 +2,7 @@ import pygame
 from random import randint
 
 from node import Node
+from figure import Figure, FigureTypes
 
 
 class MainWindow:
@@ -14,11 +15,7 @@ class MainWindow:
 
         self.running = True
 
-        self.nodes = [Node((randint(100, 500), randint(100, 500))) for _ in range(10)]
-
-        for i in range(10):
-            for j in range(1, 3):
-                self.nodes[i].add_connection(self.nodes[(i + j) % 10])
+        self.fiure = Figure(pos=(200, 200))
 
         self.events = []
 
@@ -31,9 +28,8 @@ class MainWindow:
 
             self.screen.fill((255, 255, 255))
 
-            for node in self.nodes:
-                node.update(self)
-                node.draw(self.screen)
+            self.fiure.update(self)
+            self.fiure.draw(self.screen)
 
             pygame.display.flip()
 

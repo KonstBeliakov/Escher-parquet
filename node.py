@@ -25,15 +25,32 @@ class Node:
         return len(self.connections)
 
     def add_connection(self, new_node):
+        new_node.connections.append(self)
         self.connections.append(new_node)
+
+    def remove_from_connections(self, node):
+        for i in range(len(node.connections)-1, -1, -1):
+            if node.connections[i] == self:
+                del node.connections[i]
+
+        for i in range(len(self.connections)-1, -1, -1):
+            if self.connections[i] == node:
+                del self.connections[i]
+
+    def delete_connections(self):
+        for node in self.connections:
+            for i in range(len(node.connections)-1, -1, -1):
+                if node.connections[i] == self:
+                    del node.connections[i]
+        self.connections = []
 
     def update(self, main_window):
         for event in main_window.events:
-            if event.type == pygame.MOUSEBUTTONDOWN:
+            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 mouse_x, mouse_y = event.pos
                 if (mouse_x - self.x) ** 2 + (mouse_y - self.y) ** 2 <= self.activation_radius ** 2:
                     self.active = True
-            if event.type == pygame.MOUSEBUTTONUP:
+            if event.type == pygame.MOUSEBUTTONUP and event.button == 1:
                 self.active = False
         if self.active:
             self.pos = pygame.mouse.get_pos()
