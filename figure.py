@@ -63,18 +63,17 @@ class Figure:
         for event in main_window.events:
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button == 2:
-                    closest_node = min(self.nodes, key=lambda node: dist(node.pos, event.pos))
+                    closest_node = min(self.nodes, key=lambda node: dist(node.pos + self.pos, event.pos))
                     next_node = closest_node.next
-                    new_node = Node(mid(closest_node.pos, next_node.pos))
+                    new_node = Node(figure=self, pos=(closest_node.pos + next_node.pos) // 2)
 
                     closest_node.next = new_node
                     new_node.next = next_node
 
                     self.nodes.append(new_node)
                 if event.button == 3:
-                    mouse_x, mouse_y = event.pos
                     for i, node in enumerate(self.nodes):
-                        if (mouse_x - node.x) ** 2 + (mouse_y - node.y) ** 2 <= node.activation_radius ** 2:
+                        if dist(node.pos + self.pos, event.pos) <= node.activation_radius:
                             prev_node = self.nodes[i].previous
                             next_node = self.nodes[i].next
                             print(prev_node, next_node)
