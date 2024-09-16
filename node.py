@@ -37,6 +37,9 @@ class Node:
         return ((utils.diplacement_vector[0] + self.x + figure_pos[0]) * utils.scale,
                 (utils.diplacement_vector[1] + self.y + figure_pos[1]) * utils.scale)
 
+    def connected(self, other):
+        return self.next == other or self.previous == other
+
     def __setattr__(self, key, value):
         if key == 'next':
             if getattr(self, 'next', None) is not None:

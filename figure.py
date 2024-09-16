@@ -60,6 +60,14 @@ class Figure:
     def clone_nodes_pos(self):
         return [[node.pos + clone_pos for node in self.nodes] for clone_pos in self.clones_pos]
 
+    def clone_related_nodes(self, node_pos, clone_pos):
+        for node_number, node in enumerate(self.nodes):
+            if dist(node_pos + self.pos, node.pos + clone_pos) < 10:
+                return node_number
+
+    def clones_related_nodes(self, node_pos):
+        return [self.clone_related_nodes(node_pos, clone_pos) for clone_pos in self.clones_pos]
+
     def update(self, main_window):
         for node in self.nodes:
             node.update(main_window, self.pos)
@@ -76,8 +84,25 @@ class Figure:
                         self.last_click = event.pos
                 if event.button == 2:
                     closest_node = min(self.nodes, key=lambda node: dist(node.screen_pos(self.pos), event.pos))
+                    closest_node_related = self.clones_related_nodes(closest_node.pos)
                     next_node = closest_node.next
+                    next_node_related = self.clones_related_nodes(next_node.pos)
                     new_node = Node(figure=self, pos=(closest_node.pos + next_node.pos) // 2)
+
+                    for i in range(len(self.clones_pos)):
+                        if closest_node_related[i] is not None and next_node_related[i] is not None:
+                            # related points
+                            p1, p2 = self.nodes[closest_node_related[i]], self.nodes[next_node_related[i]]
+                            if p1.connected(p2):
+                                new_clone_node = Node(figure=self, pos=(p1.pos + p2.pos) // 2)
+                                self.nodes.append(new_clone_node)
+                                if p1.next == p2:
+                                    p1.next = new_clone_node
+                                    new_clone_node.next = p2
+                                else:
+                                    p2.next = new_clone_node
+                                    new_clone_node.next = p1
+                                break
 
                     closest_node.next = new_node
                     new_node.next = next_node
