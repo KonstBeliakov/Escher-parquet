@@ -10,10 +10,9 @@ class Node:
         self.figure = figure
         self.x, self.y = pos
         self.activation_radius = 7
-        self.radius = 5
         self.draw_node = True
 
-        self.active = False
+        self.dragging = False
 
         self.__dict__['next'] = None
         self.__dict__['previous'] = None
@@ -21,6 +20,10 @@ class Node:
     @property
     def pos(self):
         return np.array([self.x, self.y])
+
+    @property
+    def radius(self):
+        return utils.node_radius
 
     @pos.setter
     def pos(self, pos):
@@ -78,21 +81,17 @@ class Node:
         for event in main_window.events:
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 if dist(event.pos, self.screen_pos(figure_position)) <= self.activation_radius:
-                    self.active = True
+                    self.dragging = True
             if event.type == pygame.MOUSEBUTTONUP and event.button == 1:
-                self.active = False
-        if self.active:
+                self.dragging = False
+        if self.dragging:
             self.pos = (self.x + (np.array(pygame.mouse.get_pos()[0]) - self.screen_pos(figure_position)[0]) * utils.scale,
                         self.y + (np.array(pygame.mouse.get_pos()[1]) - self.screen_pos(figure_position)[1]) * utils.scale)
 
     def draw(self, screen, figure_position=(0, 0), color=(0, 0, 0)):
-        surface = pygame.Surface((1000, 1000), pygame.SRCALPHA)
-
         if self.draw_node:
-            pygame.draw.circle(surface, color, self.screen_pos(figure_position), self.radius, width=2 * self.active)
+            pygame.draw.circle(utils.transparent_surface, color, self.screen_pos(figure_position), self.radius, width=2 * self.dragging)
 
         if self.next is not None:
-            pygame.draw.line(surface, color, self.screen_pos(figure_position),
+            pygame.draw.line(utils.transparent_surface, color, self.screen_pos(figure_position),
                              self.next.screen_pos(figure_position), 1)
-
-        screen.blit(surface, (0, 0))

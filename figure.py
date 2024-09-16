@@ -34,8 +34,7 @@ class Figure:
         self.clone_color = (0, 0, 0, 100)
         self.color = (0, 200, 0, 255)
 
-        self.last_click = None
-        self.map_moving = False
+        self.dragging = False
 
         self.clones_pos = []
         n = 6
@@ -77,30 +76,18 @@ class Figure:
         node2_related = self.clones_related_nodes(node2.pos)
         for i in range(len(self.clones_pos)):
             if node_related[i] is not None and node2_related[i] is not None:
-                # related points
-                #p1, p2 = self.nodes[node_related[i]], self.nodes[node2_related[i]]
                 return i, node_related[i], node2_related[i]
-                '''if p1.next == p2:
-                    return i, node_related[i], node2_related[i]
-                elif p2.next == p1:
-                    return i, node2_related[i], node_related[i]'''
         return None, None, None
 
     def update(self, main_window):
         for node in self.nodes:
             node.update(main_window, self.pos)
 
+        self.dragging = any([node.dragging for node in self.nodes])
+
         for event in main_window.events:
             if event.type == pygame.MOUSEBUTTONDOWN:
-                if event.button == 1:
-                    for i, node in enumerate(self.nodes):
-                        if dist(node.screen_pos(self.pos), event.pos) <= node.activation_radius:
-                            self.map_moving = False
-                            break
-                    else:
-                        self.map_moving = True
-                        self.last_click = event.pos
-                if event.button == 2:
+                if event.button == 2:                     # add a new node
                     closest_node = min(self.nodes, key=lambda node: dist(node.screen_pos(self.pos), event.pos))
                     next_node = closest_node.next
                     clone_idx, related_node_idx, related_node2_idx = self.related_segment(closest_node, next_node)
@@ -122,7 +109,7 @@ class Figure:
                     new_node.next = next_node
 
                     self.nodes.append(new_node)
-                if event.button == 3:
+                if event.button == 3:                         # delete a node
                     for i, node in enumerate(self.nodes):
                         if dist(node.screen_pos(self.pos), event.pos) <= node.activation_radius:
                             prev_node = self.nodes[i].previous
@@ -147,12 +134,6 @@ class Figure:
                                 elif n2.next.next == n1:
                                     self.del_node(n2.next)
                                     n2.next = n1
-            if event.type == pygame.MOUSEBUTTONUP:
-                self.map_moving = False
-
-        if self.map_moving:
-            utils.diplacement_vector += np.array(pygame.mouse.get_pos()) - np.array(self.last_click)
-            self.last_click = pygame.mouse.get_pos()
 
     def del_node(self, node):
         for i in range(len(self.nodes)-1, -1, -1):
@@ -162,9 +143,9 @@ class Figure:
                 break
 
     def draw(self, screen):
-        for node in self.nodes:
-            node.draw(screen, self.pos, color=self.color)
-
         for clone_pos in self.clones_pos:
             for node in self.nodes:
                 node.draw(screen, clone_pos, color=self.clone_color)
+
+        for node in self.nodes:
+            node.draw(screen, self.pos, color=self.color)
