@@ -1,5 +1,7 @@
 import enum
 from math import sin, cos, radians
+from typing import Tuple
+
 import pygame
 import numpy as np
 
@@ -16,7 +18,8 @@ class FigureTypes(enum.Enum):
 
 
 class Figure:
-    def __init__(self, figure_type=FigureTypes.SQUARE, pos=(0, 0), size=100):
+    def __init__(self,main_window, figure_type=FigureTypes.SQUARE, pos=(0, 0), size=100):
+        self.main_window = main_window
         self.size = size
         self.pos = pos
         self.nodes = []
@@ -68,6 +71,21 @@ class Figure:
     def clones_related_nodes(self, node_pos):
         return [self.clone_related_nodes(node_pos, clone_pos) for clone_pos in self.clones_pos]
 
+    def related_segment(self, node, node2) -> tuple:
+        '''Returns the index of the clone and the two indices of the nodes that form the linked segment'''
+        node_related = self.clones_related_nodes(node.pos)
+        node2_related = self.clones_related_nodes(node2.pos)
+        for i in range(len(self.clones_pos)):
+            if node_related[i] is not None and node2_related[i] is not None:
+                # related points
+                #p1, p2 = self.nodes[node_related[i]], self.nodes[node2_related[i]]
+                return i, node_related[i], node2_related[i]
+                '''if p1.next == p2:
+                    return i, node_related[i], node2_related[i]
+                elif p2.next == p1:
+                    return i, node2_related[i], node_related[i]'''
+        return None, None, None
+
     def update(self, main_window):
         for node in self.nodes:
             node.update(main_window, self.pos)
@@ -84,25 +102,21 @@ class Figure:
                         self.last_click = event.pos
                 if event.button == 2:
                     closest_node = min(self.nodes, key=lambda node: dist(node.screen_pos(self.pos), event.pos))
-                    closest_node_related = self.clones_related_nodes(closest_node.pos)
                     next_node = closest_node.next
-                    next_node_related = self.clones_related_nodes(next_node.pos)
+                    clone_idx, related_node_idx, related_node2_idx = self.related_segment(closest_node, next_node)
+
                     new_node = Node(figure=self, pos=(closest_node.pos + next_node.pos) // 2)
 
-                    for i in range(len(self.clones_pos)):
-                        if closest_node_related[i] is not None and next_node_related[i] is not None:
-                            # related points
-                            p1, p2 = self.nodes[closest_node_related[i]], self.nodes[next_node_related[i]]
-                            if p1.connected(p2):
-                                new_clone_node = Node(figure=self, pos=(p1.pos + p2.pos) // 2)
-                                self.nodes.append(new_clone_node)
-                                if p1.next == p2:
-                                    p1.next = new_clone_node
-                                    new_clone_node.next = p2
-                                else:
-                                    p2.next = new_clone_node
-                                    new_clone_node.next = p1
-                                break
+                    new_clone_node = Node(figure=self,
+                                          pos=(self.nodes[related_node_idx].pos + self.nodes[related_node2_idx].pos) // 2)
+                    if self.nodes[related_node_idx].next == self.nodes[related_node2_idx]:
+                        self.nodes[related_node_idx].next = new_clone_node
+                        new_clone_node.next = self.nodes[related_node2_idx]
+                    elif self.nodes[related_node2_idx].next == self.nodes[related_node_idx]:
+                        self.nodes[related_node2_idx].next = new_clone_node
+                        new_clone_node.next = self.nodes[related_node_idx]
+
+                    self.nodes.append(new_clone_node)
 
                     closest_node.next = new_node
                     new_node.next = next_node
@@ -113,15 +127,39 @@ class Figure:
                         if dist(node.screen_pos(self.pos), event.pos) <= node.activation_radius:
                             prev_node = self.nodes[i].previous
                             next_node = self.nodes[i].next
-                            self.nodes[i].delete_connections()
-                            del self.nodes[i]
-                            prev_node.next = next_node
+
+                            _, related_node_idx, related_node2_idx = self.related_segment(prev_node, next_node)
+                            if related_node_idx is not None and related_node2_idx is not None:
+                                self.nodes[i].delete_connections()
+                                del self.nodes[i]
+                                prev_node.next = next_node
+                            else:
+                                self.main_window.add_hint('Only degree 2 points can be deleted')
+
+                            clone_idx, related_node_idx, related_node2_idx = self.related_segment(prev_node, next_node)
+
+                            if related_node_idx is not None and related_node2_idx is not None:
+                                n1, n2 = self.nodes[related_node_idx], self.nodes[related_node2_idx]
+
+                                if n1.next.next == n2:
+                                    self.del_node(n1.next)
+                                    n1.next = n2
+                                elif n2.next.next == n1:
+                                    self.del_node(n2.next)
+                                    n2.next = n1
             if event.type == pygame.MOUSEBUTTONUP:
                 self.map_moving = False
 
         if self.map_moving:
             utils.diplacement_vector += np.array(pygame.mouse.get_pos()) - np.array(self.last_click)
             self.last_click = pygame.mouse.get_pos()
+
+    def del_node(self, node):
+        for i in range(len(self.nodes)-1, -1, -1):
+            if self.nodes[i] == node:
+                self.nodes[i].delete_connections()
+                del self.nodes[i]
+                break
 
     def draw(self, screen):
         for node in self.nodes:
