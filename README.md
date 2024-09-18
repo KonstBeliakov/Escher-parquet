@@ -3,6 +3,10 @@
 This program is a convenient editor for such parquets.  
 
 ![example1](img1.png)
+### How to install this project
+1. Clone the repository
+2. Run command `pip install -r requirements.txt`. If it doesn't work try `pip3 install -r requirements.txt`
+3. Run file `main.py`
 ### Control  
 - Grab the node of the main (green) shape (right mouse button) and pull it to change the shape of the parquet.  
 - When you click on a node with the left mouse button, it will be deleted  
